@@ -1,34 +1,32 @@
-import React, { useState } from "react";
-import PropTypes from "prop-types";
+import React, { useEffect, useRef } from "react";
+import p5 from "p5";
 
 function Editor({ frames }) {
-  /* const [curFrameIdx, setCurFrameIdx] = useState(0);
+  const p5Ref = useRef(null);
 
-  const setup = (p5, canvasParentRef) => {
-    p5.createCanvas(640, 480);
-  };
+  useEffect(() => {
+    let i = 0;
+    const sketch = (p5) => {
+      p5.setup = () => {
+        p5.createCanvas(640, 480);
+      };
 
-  const draw = (p5) => {
-    if (curFrameIdx < frames.length) {
-      const pixels = frames[curFrameIdx];
-      const image = p5.createImage(640, 480);
-      image.pixels = pixels;
-      image.updatePixels();
-      p5.image(image, 0, 0, 640, 480);
+      p5.draw = () => {
+        p5.background(100);
+        p5.image(frames[i], 0, 0);
+        if (i < frames.length - 1) {
+          i++;
+        }
+      };
+    };
 
-      setCurFrameIdx(curFrameIdx + 1);
-    }
-  };
-
+    new p5(sketch, p5Ref.current);
+  }, [frames]);
   return (
     <div>
-      editor
-      <Sketch setup={setup} draw={draw} />
+      <div ref={p5Ref}></div>
     </div>
-  );*/
-  return <div>editor</div>;
+  );
 }
-
-//Editor.propTypes = {};
 
 export default Editor;
