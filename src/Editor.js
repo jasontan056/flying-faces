@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import Sketch from "react-p5";
 
 function Editor({ frames }) {
-  const [curFrameIdx, setCurFrameIdx] = useState(0);
+  /* const [curFrameIdx, setCurFrameIdx] = useState(0);
 
   const setup = (p5, canvasParentRef) => {
     p5.createCanvas(640, 480);
@@ -26,7 +25,8 @@ function Editor({ frames }) {
       editor
       <Sketch setup={setup} draw={draw} />
     </div>
-  );
+  );*/
+  return <div>editor</div>;
 }
 
 //Editor.propTypes = {};
