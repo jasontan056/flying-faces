@@ -20,16 +20,62 @@ function Editor({ frames = [] }) {
 
   useEffect(() => {
     const sketch = (p5) => {
+      let maskLayer;
+
       p5.setup = () => {
         p5.createCanvas(640, 480);
+        maskLayer = p5.createGraphics(640, 480);
+        maskLayer.clear();
       };
 
       p5.draw = () => {
-        //p5.background(100);
         const frameIdx = sliderValueRef.current;
-        if (frameIdx < frames.length) {
-          p5.image(frames[frameIdx], 0, 0);
+        const frame = frames[frameIdx];
+        p5.image(frame, 0, 0);
+
+        if (p5.mouseIsPressed) {
+          maskLayer.fill(255, 0, 0, 255);
+          maskLayer.noStroke();
+          maskLayer.ellipse(p5.mouseX, p5.mouseY, 30);
         }
+
+        // Create a copy of the mask layer to draw the brushed area on the canvas.
+        const paintGuide = p5.createImage(maskLayer.width, maskLayer.height);
+        paintGuide.copy(
+          maskLayer,
+          0,
+          0,
+          maskLayer.width,
+          maskLayer.height,
+          0,
+          0,
+          maskLayer.width,
+          maskLayer.height
+        );
+        paintGuide.loadPixels();
+        for (let i = 0; i < paintGuide.pixels.length; i += 4) {
+          const alpha = paintGuide.pixels[i + 3];
+          if (alpha > 0) {
+            paintGuide.pixels[i + 3] = 50;
+          }
+        }
+        paintGuide.updatePixels();
+        p5.image(paintGuide, 0, 0);
+
+        // Build masked frame.
+        const maskedFrame = p5.createImage(frame.width, frame.height);
+        maskedFrame.copy(
+          frame,
+          0,
+          0,
+          frame.width,
+          frame.height,
+          0,
+          0,
+          frame.width,
+          frame.height
+        );
+        maskedFrame.mask(maskLayer);
       };
     };
 
