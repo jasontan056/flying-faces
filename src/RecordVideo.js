@@ -36,11 +36,19 @@ function RecordVideo({ onEdit }) {
     recording.current = false;
   };
 
+  const onEditButtonClicked = () => {
+    if (capturedFrames.current.length == 0) {
+      return;
+    }
+
+    onEdit(capturedFrames.current);
+  };
+
   return (
     <div>
       <button onClick={onRecordButtonClicked}>Record</button>
       <button onClick={onStopButtonClicked}>Stop</button>
-      <button onClick={() => onEdit(capturedFrames.current)}>Edit</button>
+      <button onClick={onEditButtonClicked}>Edit</button>
       <div ref={p5Ref}></div>
     </div>
   );
