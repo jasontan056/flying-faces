@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useCallback } from "react";
 import p5 from "p5";
 import Slider from "@material-ui/core/Slider";
 import { makeStyles } from "@material-ui/core/styles";
+import Player from "./Player";
 
 const useStyles = makeStyles({
   root: {
@@ -118,6 +119,7 @@ function Editor({ frames = [] }) {
         max={frames.length}
         onChange={handleSliderChange}
       />
+      <Player frames={frames} />
     </div>
   );
 }
