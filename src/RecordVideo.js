@@ -32,7 +32,6 @@ function RecordVideo({ onEdit }) {
   };
 
   const onStopButtonClicked = () => {
-    console.log(capturedFrames.current);
     recording.current = false;
   };
 
