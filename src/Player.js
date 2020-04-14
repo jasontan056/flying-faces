@@ -15,27 +15,41 @@ function Player({ frames = [] }) {
   const classes = useStyles();
 
   const p5Ref = useRef(null);
+  const playing = useRef(true);
+  const curIdx = useRef(0);
 
   useEffect(() => {
     const sketch = (p5) => {
-      let frameIdx = 0;
       p5.setup = () => {
         p5.createCanvas(640, 480);
       };
 
       p5.draw = () => {
-        if (frameIdx < frames.length) {
-          p5.image(frames[frameIdx], 0, 0);
-          frameIdx++;
+        if (playing.current && curIdx.current < frames.length) {
+          p5.image(frames[curIdx.current], 0, 0);
+          curIdx.current++;
         }
       };
     };
 
-    new p5(sketch, p5Ref.current);
+    const p5Instance = new p5(sketch, p5Ref.current);
+
+    return () => p5Instance.remove();
   }, [frames]);
+
+  const onPlayButtonClicked = () => {
+    playing.current = true;
+  };
+
+  const onStopButtonClicked = () => {
+    playing.current = false;
+    curIdx.current = 0;
+  };
 
   return (
     <div className={classes.root}>
+      <button onClick={onPlayButtonClicked}>Play</button>
+      <button onClick={onStopButtonClicked}>Stop</button>
       <div ref={p5Ref}></div>
     </div>
   );

@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useCallback, useState } from "react";
 import p5 from "p5";
 import Slider from "@material-ui/core/Slider";
 import { makeStyles } from "@material-ui/core/styles";
 import Player from "./Player";
+import { copyImage, animateFaces } from "./utilities";
 
 const useStyles = makeStyles({
   root: {
@@ -11,36 +12,26 @@ const useStyles = makeStyles({
     marginRight: "auto",
     maxWidth: 800,
   },
+
+  slider: {
+    marginTop: 50,
+  },
 });
 
 function Editor({ frames = [] }) {
   const classes = useStyles();
 
+  const p5ElementRef = useRef(null);
   const p5Ref = useRef(null);
   const sliderValueRef = useRef(0);
   const masks = useRef({});
+
+  const [renderedFrames, setRenderedFrames] = useState([]);
 
   useEffect(() => {
     const sketch = (p5) => {
       let maskLayer;
       let lastFrameIdx;
-
-      const copyImage = (src) => {
-        const copy = p5.createImage(src.width, src.height);
-        copy.copy(
-          src,
-          0,
-          0,
-          src.width,
-          src.height,
-          0,
-          0,
-          src.width,
-          src.height
-        );
-
-        return copy;
-      };
 
       const mouseIsPressedAndInCanvas = () => {
         return (
@@ -53,6 +44,7 @@ function Editor({ frames = [] }) {
       };
 
       p5.setup = () => {
+        p5Ref.current = p5;
         p5.createCanvas(640, 480);
         maskLayer = p5.createGraphics(640, 480);
         maskLayer.clear();
@@ -78,12 +70,12 @@ function Editor({ frames = [] }) {
           maskLayer.fill(255, 0, 0, 255);
           maskLayer.noStroke();
           maskLayer.ellipse(p5.mouseX, p5.mouseY, 30);
-          masks.current[lastFrameIdx] = copyImage(maskLayer);
+          masks.current[lastFrameIdx] = copyImage(p5, maskLayer);
         }
 
         if (frameIdx in masks.current) {
           // Create a copy of the mask layer to draw the brushed area on the canvas.
-          const paintGuide = copyImage(maskLayer);
+          const paintGuide = copyImage(p5, maskLayer);
           paintGuide.loadPixels();
           for (let i = 0; i < paintGuide.pixels.length; i += 4) {
             const alpha = paintGuide.pixels[i + 3];
@@ -97,7 +89,7 @@ function Editor({ frames = [] }) {
       };
     };
 
-    new p5(sketch, p5Ref.current);
+    new p5(sketch, p5ElementRef.current);
   }, [frames]);
 
   const valueText = useCallback((value) => `Frame ${value}`, []);
@@ -106,10 +98,20 @@ function Editor({ frames = [] }) {
     sliderValueRef.current = newValue;
   }, []);
 
+  const onRenderButtonClicked = () => {
+    if (!p5Ref.current) {
+      return;
+    }
+
+    setRenderedFrames(animateFaces(p5Ref.current, frames, masks.current));
+  };
+
   return (
     <div className={classes.root}>
-      <div ref={p5Ref}></div>
+      <button onClick={onRenderButtonClicked}>Render</button>
+      <div ref={p5ElementRef}></div>
       <Slider
+        className={classes.slider}
         defaultValue={0}
         getAriaValueText={valueText}
         aria-labelledby="discrete-slider"
@@ -119,7 +121,7 @@ function Editor({ frames = [] }) {
         max={frames.length}
         onChange={handleSliderChange}
       />
-      <Player frames={frames} />
+      <Player frames={renderedFrames} />
     </div>
   );
 }
