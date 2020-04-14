@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import React, { useRef, useEffect } from "react";
 import p5 from "p5";
 
 function RecordVideo({ onEdit }) {
@@ -13,10 +13,11 @@ function RecordVideo({ onEdit }) {
         p5.createCanvas(640, 480);
         capture.current = p5.createCapture(p5.VIDEO);
         capture.current.size(640, 480);
+        capture.current.hide();
       };
 
       p5.draw = () => {
-        p5.background(100);
+        p5.image(capture.current.get(), 0, 0);
 
         if (recording.current) {
           capturedFrames.current.push(capture.current.get());
@@ -36,7 +37,7 @@ function RecordVideo({ onEdit }) {
   };
 
   const onEditButtonClicked = () => {
-    if (capturedFrames.current.length == 0) {
+    if (capturedFrames.current.length === 0) {
       return;
     }
 
