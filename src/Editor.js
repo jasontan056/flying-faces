@@ -46,10 +46,13 @@ function Editor({ frames = [] }) {
       p5.setup = () => {
         p5Ref.current = p5;
         p5.createCanvas(640, 480);
+        p5.pixelDensity(1);
         maskLayer = p5.createGraphics(640, 480);
+        maskLayer.pixelDensity(1);
         maskLayer.clear();
       };
 
+      let paintGuide;
       p5.draw = () => {
         const frameIdx = sliderValueRef.current;
 
@@ -70,12 +73,20 @@ function Editor({ frames = [] }) {
           maskLayer.fill(255, 0, 0, 255);
           maskLayer.noStroke();
           maskLayer.ellipse(p5.mouseX, p5.mouseY, 30);
-          masks.current[lastFrameIdx] = copyImage(p5, maskLayer);
+
+          if (!(frameIdx in masks.current)) {
+            masks.current[frameIdx] = maskLayer.get();
+          }
+          copyImage(maskLayer, masks.current[frameIdx]);
         }
 
         if (frameIdx in masks.current) {
           // Create a copy of the mask layer to draw the brushed area on the canvas.
-          const paintGuide = copyImage(p5, maskLayer);
+          const mask = masks.current[frameIdx];
+          if (!paintGuide) {
+            paintGuide = p5.createImage(mask.width, mask.height);
+          }
+          copyImage(mask, paintGuide);
           paintGuide.loadPixels();
           for (let i = 0; i < paintGuide.pixels.length; i += 4) {
             const alpha = paintGuide.pixels[i + 3];
