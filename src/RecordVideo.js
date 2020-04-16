@@ -25,7 +25,8 @@ function RecordVideo({ onEdit }) {
       };
     };
 
-    new p5(sketch, p5Ref.current);
+    const p5Instance = new p5(sketch, p5Ref.current);
+    return () => p5Instance.remove();
   }, []);
 
   const onRecordButtonClicked = () => {
