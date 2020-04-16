@@ -25,6 +25,7 @@ function Editor({ frames = [] }) {
   framesRef.current = frames;
   const p5ElementRef = useRef(null);
   const p5InstanceRef = useRef(null);
+  const maskLayerRef = useRef(null);
   const sliderValueRef = useRef(0);
   const masksRef = useRef({});
 
@@ -51,6 +52,7 @@ function Editor({ frames = [] }) {
         maskLayer = p5.createGraphics(640, 480);
         maskLayer.pixelDensity(1);
         maskLayer.clear();
+        maskLayerRef.current = maskLayer;
       };
 
       const copyWithTransparency = (src, dest) => {
@@ -133,6 +135,12 @@ function Editor({ frames = [] }) {
   const onRenderButtonClicked = () => {
     if (!p5InstanceRef.current) {
       return;
+    }
+
+    // Copy masks currently being edited into our masks object.
+    const frameIdx = sliderValueRef.current;
+    if (frameIdx in masksRef.current) {
+      copyImage(maskLayerRef.current, masksRef.current[frameIdx]);
     }
 
     setRenderedFrames(
