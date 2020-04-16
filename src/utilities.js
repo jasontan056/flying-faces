@@ -23,28 +23,28 @@ export function animateFaces(p5Instance, framesSrc, masks) {
     );
     face.mask(mask);
 
-    const graphics = p5Instance.createGraphics(mask.width, mask.height);
     const vel = p5.Vector.random2D().setMag(VELOCITY);
     let pos = p5Instance.createVector(0, 0);
     for (let i = endingIdx; i >= 0; i--) {
       const frame = frames[i];
-      graphics.clear();
-      // Apply both the original frame as well as the face to the graphics buffer.
-      graphics.image(frame, 0, 0);
-      graphics.image(face, pos.x, pos.y);
-      pos.add(vel);
-
-      // Save resulting combination back into the frame array.
-      frames[i] = copyImage(
-        graphics,
-        p5Instance.createImage(graphics.width, graphics.height)
+      frame.blend(
+        face,
+        0,
+        0,
+        frame.width,
+        frame.height,
+        pos.x,
+        pos.y,
+        frame.width,
+        frame.height,
+        p5.BLEND
       );
+      pos.add(vel);
 
       if (Math.abs(pos.x) > frame.width || Math.abs(pos.y) > frame.height) {
         break;
       }
     }
-    graphics.remove();
   }
 
   return frames;
