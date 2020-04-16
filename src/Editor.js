@@ -32,8 +32,8 @@ function Editor({ frames = [] }) {
   const [renderedFrames, setRenderedFrames] = useState([]);
 
   useEffect(() => {
+    let maskLayer;
     const sketch = (p5) => {
-      let maskLayer;
       let lastFrameIdx;
 
       const mouseIsPressedAndInCanvas = () => {
@@ -123,7 +123,12 @@ function Editor({ frames = [] }) {
 
     p5InstanceRef.current = new p5(sketch, p5ElementRef.current);
 
-    return () => p5InstanceRef.current.remove();
+    return () => {
+      p5InstanceRef.current.remove();
+      if (maskLayer) {
+        maskLayer.remove();
+      }
+    };
   }, []);
 
   const valueText = useCallback((value) => `Frame ${value}`, []);
