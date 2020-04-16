@@ -21,10 +21,12 @@ const useStyles = makeStyles({
 function Editor({ frames = [] }) {
   const classes = useStyles();
 
+  const framesRef = useRef(frames);
+  framesRef.current = frames;
   const p5ElementRef = useRef(null);
   const p5InstanceRef = useRef(null);
   const sliderValueRef = useRef(0);
-  const masks = useRef({});
+  const masksRef = useRef({});
 
   const [renderedFrames, setRenderedFrames] = useState([]);
 
@@ -51,21 +53,46 @@ function Editor({ frames = [] }) {
         maskLayer.clear();
       };
 
+      const copyWithTransparency = (src, dest) => {
+        copyImage(src, dest);
+        dest.loadPixels();
+        for (let i = 0; i < dest.pixels.length; i += 4) {
+          const alpha = dest.pixels[i + 3];
+          if (alpha > 0) {
+            dest.pixels[i + 3] = 50;
+          }
+        }
+        dest.updatePixels();
+      };
+
       let paintGuide;
       p5.draw = () => {
         const frameIdx = sliderValueRef.current;
 
         if (frameIdx !== lastFrameIdx) {
+          // Copy mask layer into the last frame's mask.
+          const lastFrameMask = masksRef.current[lastFrameIdx];
+          if (lastFrameMask) {
+            copyImage(maskLayer, masksRef.current[lastFrameIdx]);
+          }
+
           maskLayer.clear();
-          const existingMask = masks.current[frameIdx];
+
+          // Load  any existing mask for the new frame into the  mask layer.
+          const existingMask = masksRef.current[frameIdx];
           if (existingMask) {
             maskLayer.image(existingMask, 0, 0);
+          }
+
+          // Copy the mask layer to the paintGuide with some transparency.
+          if (paintGuide) {
+            copyWithTransparency(maskLayer, paintGuide);
           }
 
           lastFrameIdx = frameIdx;
         }
 
-        const frame = frames[frameIdx];
+        const frame = framesRef.current[frameIdx];
         p5.image(frame, 0, 0);
 
         if (mouseIsPressedAndInCanvas()) {
@@ -73,27 +100,20 @@ function Editor({ frames = [] }) {
           maskLayer.noStroke();
           maskLayer.ellipse(p5.mouseX, p5.mouseY, 30);
 
-          if (!(frameIdx in masks.current)) {
-            masks.current[frameIdx] = maskLayer.get();
+          // If we don't already have a mask for this frame, create one.
+          if (!(frameIdx in masksRef.current)) {
+            masksRef.current[frameIdx] = maskLayer.get();
           }
-          copyImage(maskLayer, masks.current[frameIdx]);
+
+          // Copy mask layer to paintGuide.
+          if (!paintGuide) {
+            paintGuide = p5.createImage(maskLayer.width, maskLayer.height);
+          }
+          copyWithTransparency(maskLayer, paintGuide);
         }
 
-        if (frameIdx in masks.current) {
-          // Create a copy of the mask layer to draw the brushed area on the canvas.
-          const mask = masks.current[frameIdx];
-          if (!paintGuide) {
-            paintGuide = p5.createImage(mask.width, mask.height);
-          }
-          copyImage(mask, paintGuide);
-          paintGuide.loadPixels();
-          for (let i = 0; i < paintGuide.pixels.length; i += 4) {
-            const alpha = paintGuide.pixels[i + 3];
-            if (alpha > 0) {
-              paintGuide.pixels[i + 3] = 50;
-            }
-          }
-          paintGuide.updatePixels();
+        // Draw the paint guide on the canvas
+        if (paintGuide) {
           p5.image(paintGuide, 0, 0);
         }
       };
@@ -102,7 +122,7 @@ function Editor({ frames = [] }) {
     p5InstanceRef.current = new p5(sketch, p5ElementRef.current);
 
     return () => p5InstanceRef.current.remove();
-  }, [frames]);
+  }, []);
 
   const valueText = useCallback((value) => `Frame ${value}`, []);
 
@@ -116,7 +136,7 @@ function Editor({ frames = [] }) {
     }
 
     setRenderedFrames(
-      animateFaces(p5InstanceRef.current, frames, masks.current)
+      animateFaces(p5InstanceRef.current, frames, masksRef.current)
     );
   };
 
