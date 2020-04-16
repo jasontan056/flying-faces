@@ -22,7 +22,7 @@ function Editor({ frames = [] }) {
   const classes = useStyles();
 
   const p5ElementRef = useRef(null);
-  const p5Ref = useRef(null);
+  const p5InstanceRef = useRef(null);
   const sliderValueRef = useRef(0);
   const masks = useRef({});
 
@@ -44,7 +44,6 @@ function Editor({ frames = [] }) {
       };
 
       p5.setup = () => {
-        p5Ref.current = p5;
         p5.createCanvas(640, 480);
         p5.pixelDensity(1);
         maskLayer = p5.createGraphics(640, 480);
@@ -100,7 +99,9 @@ function Editor({ frames = [] }) {
       };
     };
 
-    new p5(sketch, p5ElementRef.current);
+    p5InstanceRef.current = new p5(sketch, p5ElementRef.current);
+
+    return () => p5InstanceRef.current.remove();
   }, [frames]);
 
   const valueText = useCallback((value) => `Frame ${value}`, []);
@@ -110,11 +111,13 @@ function Editor({ frames = [] }) {
   }, []);
 
   const onRenderButtonClicked = () => {
-    if (!p5Ref.current) {
+    if (!p5InstanceRef.current) {
       return;
     }
 
-    setRenderedFrames(animateFaces(p5Ref.current, frames, masks.current));
+    setRenderedFrames(
+      animateFaces(p5InstanceRef.current, frames, masks.current)
+    );
   };
 
   return (
